@@ -1,0 +1,24 @@
+@startuml
+class HorizonFrame {
+    - Cursor[] cur_
+    - RefLinesOnRoute reflines_
+    - RefLinesOnRoute reflines_in_reversed_dir_
+    + Cursor[] getCursors()
+    + RefLinesOnRoute getCurRefLines()
+    + RefLinesOnRoute getRefLinesReverdeDir()
+}
+HorizonFrame *-- Cursor
+HorizonFrame *-- RefLinesOnRoute
+
+class Cursor {
+    - LaneId lane_id_
+    - float_t offset_
+}
+Cursor *-- LaneId
+
+class RefLinesOnRoute {
+    - std::vector<std::pair<Cursor, RefLineSP>> lines_
+}
+RefLinesOnRoute *-- RefLine
+
+@enduml

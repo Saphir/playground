@@ -1,0 +1,107 @@
+@startuml
+participant ScenarioManager
+ScenarioManager -> DataDrivenPlanner ++ : data_driven_planner_->run()
+note over DataDrivenPlanner : src/planning/src/data_driven_planner/data_driven_planner.cpp
+hnote over DataDrivenPlanner : Step 1) clear info
+
+hnote over DataDrivenPlanner : Step 2) update planning world
+DataDrivenPlanner -> ModelResultManager ++ : model_result_manager_->update()
+note over ModelResultManager : src/planning/src/data_driven_planner/common/model_result_manager.cpp
+
+ModelResultManager -> ModelResultManager ++ : update_with_ddp_model_in_planning()
+note over DdpModel : src/planning/src/data_driven_planner/models/ddp_model_inferjam.cpp
+
+autonumber 1.1
+ModelResultManager -> DdpContext : get_last_fusion_timestamp()
+ModelResultManager -> DdpContext : get_ego_pose()
+ModelResultManager -> DdpModel : ddp_model_->run()
+hnote over ModelResultManager : get ddp_trajectorys
+loop for traj in ddp_trajectorys
+alt traj.type is DDP_LANE_CHANGE
+ModelResultManager -> ModelResultManager : ddp_lane_change_info_.push_back(traj)
+end
+ModelResultManager -> ModelResultManager : mlog/mdebug
+end
+deactivate ModelResultManager
+autonumber stop
+deactivate ModelResultManager
+
+DataDrivenPlanner -> EgoState ++ : ego_state_->update()
+EgoState -> WorldModel : world_model_->get_cart_ego_state_manager().get_cart_ego_state()
+EgoState -> EgoState ++ : update_planning_init_point()
+EgoState -> EgoState : compute_stitching_trajectory()
+deactivate EgoState
+deactivate EgoState
+
+DataDrivenPlanner -> VirtualLaneManager ++ : virtual_lane_manager_->update()
+note over VirtualLaneManager : src/planning/src/data_driven_planner/common/virtual_lane_manager.cpp
+hnote over VirtualLaneManager : 1) order_id_to_lane_.clear()
+hnote over VirtualLaneManager : 2) check if OFF_MAP or OFF_ROUTE
+hnote over VirtualLaneManager : 3) lines_all := world_model_.horizon_kit_.getCurrentFrame().getCurRefLines().getLinesAll()
+hnote over VirtualLaneManager : 4) get curr intersection
+hnote over VirtualLaneManager : 5) get curr traffic light intersection
+hnote over VirtualLaneManager : 6) get curr ramp
+hnote over VirtualLaneManager : 7) get destination
+hnote over VirtualLaneManager : 8) generate VirtualLane[]
+loop for ref_line in lines_all
+VirtualLaneManager -> VirtualLaneManager: order_id_to_lane_.append(VirtualLane(ref_line, enu2car))
+end
+hnote over VirtualLaneManager : 9) remove unmatched lanes
+hnote over VirtualLaneManager : 10) add remaining new lanes to mapping
+hnote over VirtualLaneManager : 11) optionality: if the lane is optional
+hnote over VirtualLaneManager : 12) init each lane
+loop for lane in order_id_to_lane_
+VirtualLaneManager -> VirtualLaneManager: lane->init()
+end
+VirtualLaneManager -> VirtualLaneManager : update_current_lane()
+deactivate VirtualLaneManager
+DataDrivenPlanner -> ObstacleManager : obstacle_manager_->update()
+DataDrivenPlanner -> ObstacleManager : obstacle_manager_->update_virtual_obstacles()
+
+DataDrivenPlanner -> ReferencePathManager ++ : reference_path_manager_->update()
+loop for path in reference_paths_
+alt virtual_lane_manager->has_lane(path.id)
+ReferencePathManager -> ReferencePath ++ : path.update()
+ReferencePath -> ReferencePath : frenet_ego_state_.update(frenet_coord_)
+ReferencePath -> ReferencePath : DdpContext.obstacle_manager_.get_reference_path_obstacles(*this)
+deactivate ReferencePath
+end
+end
+deactivate ReferencePathManager
+
+DataDrivenPlanner -> ObstacleManager : obstacle_manager_->assign_obstacles_to_lanes()
+DataDrivenPlanner -> TrafficLightDecider : traffic_light_decider_->update()
+
+hnote over DataDrivenPlanner : Step 3) update state machine
+DataDrivenPlanner -> ScenarioStateMachine ++ : scenario_state_machine_->update()
+note over ScenarioStateMachine : src/planning/src/data_driven_planner/scenario/scenario_state_machine.cpp
+ScenarioStateMachine -> WorldModel : world_model_->get_vehicle_dbw_status()
+ScenarioStateMachine -> LaneChangeRequestManager : lc_req_mgr_->update()
+
+alt int_request_.enable_int_request()
+hnote over LaneChangeRequestManager : int_request_.update()
+else
+hnote over LaneChangeRequestManager : int_request_.reset_int_cnt()
+end
+
+alt int_request_.request() == NO_CHANGE && hd_map_valid && !is_ddmap
+hnote over LaneChangeRequestManager : map_request_.update()
+hnote over LaneChangeRequestManager : dd_request_.update()
+end
+
+
+
+
+
+
+LaneChangeRequestManager -> LaneChangeRequestManager : map_request_.update()
+LaneChangeRequestManager -> LaneChangeRequestManager : int_request_.update()
+LaneChangeRequestManager -> LaneChangeRequestManager : int_request_.update()
+
+hnote over DataDrivenPlanner : Step 4) copy planning result
+DataDrivenPlanner -> DataDrivenPlanner : disable_data_driven_planning(DdpContext::Instance()->mutable_planning_result())
+
+hnote over DataDrivenPlanner : Step 5) check proposal match
+DataDrivenPlanner -> DataDrivenPlanner : any(virtual_lanes[i].lc_proposal_id > 0)  
+
+@enduml
