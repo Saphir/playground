@@ -1,24 +1,42 @@
-#include <cstdlib>  /* exit system malloc atoi rand */
-#include <iostream> /* std::cout std::endl */
-#include <cstdio>   /* fopen fgets printf */
 #include <unistd.h> /* read sleep NULL close */
 
-int main(int argc, char * argv[]) {
-#ifndef NDEBUG
-    std::cout << "[MAIN] argc: " << argc << std::endl;
-    std::cout << "[MAIN] argv: ";
-    for (std::int32_t i {0}; i < argc; ++i) {
-        std::cout << argv[i];
-        if (i == argc - 1) {
-            std::cout << std::endl;
-        } else {
-            std::cout << " ";
-        }
-    }
-#endif
-    std::endl(std::cout << "Hello World!");
+#include <cstdio>   /* fopen fgets printf */
+#include <cstdlib>  /* exit system malloc atoi rand */
+#include <iostream> /* std::cout std::endl */
 
-    std::endl(std::cout << "MAIN exit");
-    return EXIT_SUCCESS;
+#include "test_cpp/test.hpp"
+extern "C" {
+#include "test_c/test.h"
 }
 
+void foo() {
+  int a = 7;
+  student_t s1 = {0};
+  s1.cls = 'A';
+  s1.grade = 100;
+  s1.point = &a;
+
+  student_t s2 = {0};
+  s2.cls = 'B';
+  s2.grade = 99;
+  s2.point = &a;
+
+  nest_stu_t ns = {0};
+  ns.rank = 'A';
+  ns.nest_stu = s1;
+  ns.strct_array[0] = s2;
+  ns.strct_point = &s1;
+  ns.strct_point_array[0] = &s1;
+  ns.strct_point_array[1] = &s2;
+
+  nest_stu_t out = {0};
+  test_c_func('a', 1, 2.3, (char *)&s1, (char *)&ns, (char *)&out);
+}
+
+void bar() { test_cpp_func(7); }
+
+int main(int argc, char *argv[]) {
+  foo();
+  bar();
+  return EXIT_SUCCESS;
+}
