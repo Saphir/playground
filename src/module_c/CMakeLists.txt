@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.0.0)
 
-project(module_cpp VERSION 0.1.0)
+project(module_c LANGUAGES C VERSION 0.1.0)
 message(STATUS ">>> [PROJECT] ${PROJECT_NAME} @ ${PROJECT_SOURCE_DIR}/MakeLists.txt")
+set(CMAKE_CXX_STANDARD 14)
 
 add_compile_options(-Wall -g -O0)
 
