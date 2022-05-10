@@ -5,12 +5,13 @@
 
 g_stu_t g_stu = {11};
 
-int test_c_func(char char_arg, int int_arg, float float_arg, char *stu_buf,
-                char *nest_stu_buf, char *out_buf) {
+int test_c_func(char char_arg, int int_arg, float float_arg, char *string_arg,
+                char *stu_buf, char *nest_stu_buf, char *out_buf) {
   // data type test
   printf("char arg: %c\n", char_arg);
   printf("int arg: %d\n", int_arg);
   printf("float arg: %f\n", float_arg);
+  printf("string arg: %s\n", string_arg);
 
   student_t *stu_p = NULL;
   nest_stu_t *nest_stu_p = NULL;

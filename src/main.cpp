@@ -30,10 +30,12 @@ void foo() {
   ns.strct_point_array[1] = &s2;
 
   nest_stu_t out = {0};
-  test_c_func('a', 1, 2.3, (char *)&s1, (char *)&ns, (char *)&out);
+
+  char str[] = "foo";
+  test_c_func('a', 1, 2.3, str, (char *)&s1, (char *)&ns, (char *)&out);
 }
 
-void bar() { test_cpp_func(7); }
+void bar() { test_cpp::test_cpp_func(7); }
 
 int main(int argc, char *argv[]) {
   foo();

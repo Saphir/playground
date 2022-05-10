@@ -19,7 +19,7 @@ typedef struct g_student {
   int g_grade;
 } g_stu_t;
 
-int test_c_func(char char_arg, int int_arg, float float_arg, char *stu_buf,
-                char *nest_stu_buf, char *out_buf);
+int test_c_func(char char_arg, int int_arg, float float_arg, char *string_arg,
+                char *stu_buf, char *nest_stu_buf, char *out_buf);
 
 #endif  // TEST_H

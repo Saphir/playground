@@ -3,7 +3,6 @@
 
 import ctypes
 import ctypes.util
-import os
 
 
 def test_c(load_cdll):
@@ -188,7 +187,9 @@ def test_c(load_cdll):
     float_arg = ctypes.c_float(3.14159)
     # 准备出参
     out_buf = ctypes.create_string_buffer(b"", ctypes.sizeof(Student))
-    load_cdll.test_c_func(char_arg, int_arg, float_arg, ctypes.byref(student_obj), ctypes.byref(nest_student_obj), out_buf)
+
+    string_arg = ctypes.c_char_p(b"foo")
+    load_cdll.test_c_func(char_arg, int_arg, float_arg, string_arg, ctypes.byref(student_obj), ctypes.byref(nest_student_obj), out_buf)
     print("out_buf:", ctypes.cast(out_buf, ctypes.POINTER(Student)).contents)
 
     # 调用C源码中的g_stu结构体
@@ -197,7 +198,10 @@ def test_c(load_cdll):
 
 def test_cpp(load_cdll):
     int_arg = ctypes.c_int(43)
-    load_cdll.test_cpp_func_cwrapper(int_arg)
+    string_arg = ctypes.c_char_p(b"Test_Cpp")
+    load_cdll._ZN8test_cpp13test_cpp_funcEi(int_arg)
+    load_cdll._ZN8test_cpp13test_cpp_funcEPKc(string_arg)
+    # load_cdll._ZN8test_cpp13test_cpp_funcERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE(string_arg)
 
 if __name__ == '__main__':
     load_cdll = ctypes.cdll.LoadLibrary("build/src/libtest.so")
