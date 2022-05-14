@@ -4,6 +4,7 @@ project(module_cpp VERSION 0.1.0)
 message(STATUS ">>> [PROJECT] ${PROJECT_NAME} @ ${PROJECT_SOURCE_DIR}/MakeLists.txt")
 
 add_compile_options(-Wall -g -O0)
+set(CMAKE_VERBOSE_MAKEFILE 1)
 
 # source file dirs
 list(APPEND SRC_DIR ${PROJECT_SOURCE_DIR})
