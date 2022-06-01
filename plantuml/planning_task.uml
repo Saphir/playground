@@ -1,0 +1,47 @@
+@startuml
+participant mtaskflow
+mtaskflow -> PlanningTask ++ : task->run_once()
+
+PlanningTask -> PlanningTask ++ : update_world_model()
+alt not module_status_receiver_->empty()
+hnote over PlanningTask : GET module_status
+PlanningTask -> WorldModel : feed_vehicle_dbw_status()
+end
+
+PlanningTask -> PlanningTask : update_fusion_object_info()
+PlanningTask -> PlanningTask : update_planning_request()
+PlanningTask -> PlanningTask ++ : update_vehicle_status()
+PlanningTask -> PlanningTask : update_chassis_report()
+PlanningTask -> PlanningTask : update_wheel_report()
+PlanningTask -> PlanningTask : update_body_report()
+PlanningTask -> PlanningTask ++ : update_ego_pose()
+hnote over PlanningTask : UPDATE vehicle_status_, egopose_status_valid_ FROM mla_localization
+deactivate
+alt vehicle_status_.available
+PlanningTask -> WorldModel ++ : feed_vehicle_status(vehicle_status_, egopose_status_valid_, trans_info_, anchor_)
+hnote over WorldModel : UPDATE ego_state_manager_ wheel_speed_report_ vehicle_light_report_ vehicle_status_ egopose_status_valid_ trans_ anchor_
+end
+deactivate
+deactivate
+PlanningTask -> PlanningTask ++ : update_worldmodel_info()
+hnote over PlanningTask : GET horizon (pop oldest)
+alt horizon_data.available && MAP_OFFLINE
+PlanningTask -> WorldModel : world_model_->feed_horizon(map_offline.data)
+end
+hnote over PlanningTask : GET traffic_light (pop oldest)
+PlanningTask -> WorldModel : world_model_->feed_traffic_light_info()
+PlanningTask -> TrafficLightInfoManager : traffic_light_info_manager->feed_traffic_light_info()
+deactivate
+PlanningTask -> PlanningTask : update_prediction_info()
+deactivate
+PlanningTask -> PlanningTask : can_run()
+PlanningTask -> WorldModel ++ : world_model_->update()
+WorldModel -> WorldModel ++ : update_members()
+WorldModel -> WorldModel : ego_state_manager_.set_ego_carte()
+WorldModel -> WorldModel : horizon_kit_->updateTransform(anchor_, trans_)
+WorldModel -> WorldModel : horizon_kit_->updatePosition() 
+deactivate
+deactivate
+PlanningTask -> PlanningTask : scenario_manager_->execute_planning()
+deactivate
+@enduml

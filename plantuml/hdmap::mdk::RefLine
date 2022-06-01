@@ -1,0 +1,219 @@
+@startuml
+class VirtualLane {
+    +static const double kMapMustChangeDistanceUrban;
+    +static const double kMapMustChangeDistanceHighway;
+    +string first_point_lane_id_;
+    -static const double kMinMatchingRatio;
+    -VirtualLanePoint[] lane_points_;
+    -int virtual_id_;
+    -int order_id_;
+    -int lc_proposal_id_;
+    -double lateral_offset_;
+    -bool b_optional_;
+    -Direction lane_marks_;
+    -LaneType lane_type_;
+    -LooseBoundType loose_bound_type_;
+    -int[] track_ids_;
+    -hdmap::mdk::RefLine refline_;
+    -hdmap::mdk::NaviEventOnPath[] lane_merging_splittings_;
+    +VirtualLane(void);
+    +VirtualLane(const hdmap::mdk::RefLine &, const msquare::Transform &);
+    +~VirtualLane();
+    +int order_id(void) const;
+    +int virtual_id(void) const;
+    +int lc_proposal_id(void) const;
+    +int get_default_proposal_id(void);
+    +bool b_optional(void) const;
+    +LooseBoundType loose_bound_type(void) const;
+    +void set_loose_bound_type(msquare::ddp::LooseBoundType);
+    +void update_loose_bound_type(void);
+    +const std::vector<msquare::ddp::VirtualLanePoint, std::allocator<msquare::ddp::VirtualLanePoint> > & lane_points(void) const;
+    +int size(void) const;
+    +double lateral_offset(void) const;
+    +double calc_lateral_offset(double, double) const;
+    +void set_order_id(int);
+    +void set_virtual_id(int);
+    +void set_b_optional(bool);
+    +int get_common_point_num(std::shared_ptr<msquare::ddp::VirtualLane>) const;
+    +bool is_obstacle_on(const msquare::ddp::Obstacle *) const;
+    +bool get_point_by_distance(double, msquare::ddp::VirtualLanePoint &) const;
+    +void has_split_ahead(bool &, bool &) const;
+    +msquare::ddp::LaneType lane_type(void) const;
+    +void init(void);
+    +int lc_map_decision(void) const;
+    +const hdmap::mdk::Cursor get_car_cursor(void) const;
+    +int rc_map_decision(void) const;
+    +double lc_map_decision_offset(void) const;
+    +double must_change_lane(double) const;
+    +const std::vector<hdmap::mdk::NaviEventOnPath, std::allocator<hdmap::mdk::NaviEventOnPath> > & getLaneMergingSplittings(void) const;
+    +const hdmap::mdk::RefLine & refline(void) const;
+    -void update_lane_change_proposal_id(void);
+    -double get_matching_score(const msquare::ddp::DdpTrajectory &);
+}
+note top of VirtualLane : msquare::ddp::VirtualLane
+VirtualLane *-- VirtualLanePoint
+VirtualLane *-- Direction
+VirtualLane *-- LaneType
+VirtualLane *-- LooseBoundType
+VirtualLane *-- RefLine
+
+class VirtualLanePoint {
+    +VirtualPoint2D car_point
+    +VirtualPoint3D enu_point;
+    +double curvature = 0;
+    +double yaw = 0;
+    +double distance_to_left_road_border = 1.6;
+    +double distance_to_right_road_border = 1.6;
+    +double distance_to_left_lane_border = 1.6;
+    +double distance_to_right_lane_border = 1.6;
+    +double lane_width = 3.2;
+    +double speed_limit = double::max// unit: m/s
+    +int track_id;
+    +LaneBoundaryType left_road_border_type;
+    +LaneBoundaryType right_road_border_type;
+    +LaneBoundaryType left_lane_border_type;
+    +LaneBoundaryType right_lane_border_type;
+    +bool on_route = true;
+    +bool is_in_intersection = false;
+    +LaneType lane_type = LaneType::UNKNOWN;
+}
+VirtualLanePoint *-- VirtualPoint2D
+VirtualLanePoint *-- VirtualPoint3D
+VirtualLanePoint *-- LaneBoundaryType
+VirtualLanePoint *-- LaneType
+
+class RefLine {
+    -Cursor cursor_
+    -LanePath lane_path_ 
+    -RefPoint[] points_
+    -DriveLaneInfo drive_lane_info_
+    -map<NaviEventType, NaviEventOnPath[]> maneuvers_
+    -LaneBoundary[] lane_boundaries_right_
+    -LaneBoundary[] lane_boundaries_left_
+}
+note top of RefLine : hdmap::mdk::RefLine
+RefLine *-- LanePath
+RefLine *-- Cursor
+RefLine *-- DriveLaneInfo
+RefLine *-- LaneBoundary
+RefLine *-- RefPoint
+
+class LanePath {
+    -LaneId lane_ids_
+    -Cursor start_
+    -Cursor end_
+    -bool off_route_
+}
+LanePath *-- LaneId
+LanePath *-- Cursor
+
+class Cursor {
+    -LaneId lane_id_
+    -float_t offset_
+}
+Cursor *-- LaneId
+
+class RefPoint {
+    -Cursor id_
+    -Point3f pos_enu_
+    -Point3f pos_frenet_
+    -RefMapAttrPtr map_attr_
+}
+RefPoint *-- Cursor
+RefPoint *-- Point3f
+RefPoint *-- RefMapAttrPtr
+
+class LaneId {
+    -LaneGroupId lane_group_id_
+    -size_t count_vertical_
+}
+LaneId *-- LaneGroupId
+
+class DriveLaneInfo {
+    -float_t max_permit_distance_
+    -int min_lane_change_count_
+    -int min_refline_change_count_
+    -std::pair<float, float> distance_to_dash_line_
+}
+
+class LaneBoundary {
+    -ParallelLaneBoundaries &parallel_
+    -size_t count_
+    -LaneBoundaryId id_
+    -BoundaryType boundary_type_
+    -LaneLineType lane_line_type_
+    -LaneBoundaryColor color_
+    -Polyline line_
+    -Distance length_
+}
+LaneBoundary *.. ParallelLaneBoundaries
+LaneBoundary *-- LaneBoundaryId
+LaneBoundary *-- BoundaryType
+LaneBoundary *-- LaneLineType
+LaneBoundary *-- LaneBoundaryColor
+LaneBoundary *-- Polyline
+LaneBoundary *-- Distance
+
+class ParallelLaneBoundaries {
+    -LaneBoundaryGroup &lane_boundary_group_
+    -size_t count_
+    -LaneBoundary[] boundaries_
+}
+ParallelLaneBoundaries *-- LaneBoundaryGroup
+ParallelLaneBoundaries *-- LaneBoundary
+
+class LaneGroupId {
+    -RoadId road_id_
+    -bool dir_reversed_
+    -size_t index_
+}
+LaneGroupId *-- RoadId
+
+class RoadId {
+    -uint32 tile_id_
+    -uint32 road_count_
+    -uint16 ur_id_
+}
+
+class LaneType {
+    UNKNOWN
+    NORMAL
+    VIRTUAL
+    PARKING
+    ACCELERATE
+    DECELERATE
+    BUS
+    EMERGENCY
+    ACC_DEC
+    LEFT_TURN_WAITING_AREA
+    NON_MOTOR
+    TOLL_ETC
+    TOLL_MANUAL
+    TOLL
+    TIDAL
+}
+
+class HorizonFrame {
+    - Cursor[] cur_
+    - RefLinesOnRoute reflines_
+    - RefLinesOnRoute reflines_in_reversed_dir_
+    + Cursor[] getCursors()
+    + RefLinesOnRoute getCurRefLines()
+    + RefLinesOnRoute getRefLinesReverdeDir()
+}
+note top of HorizonFrame : hdmap::mdk::HorizonKit
+HorizonFrame *-- Cursor
+HorizonFrame *-- RefLinesOnRoute
+
+class Cursor {
+    - LaneId lane_id_
+    - float_t offset_
+}
+Cursor *-- LaneId
+
+class RefLinesOnRoute {
+    - std::vector<std::pair<Cursor, RefLineSP>> lines_
+}
+RefLinesOnRoute *-- RefLine
+
+@enduml
