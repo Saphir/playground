@@ -1,0 +1,31 @@
+version: '3'
+services:
+# docker run --name elan.dev -itd \
+#  --privileged --cap-add=SYS_PTRACE 
+#  --security-opt seccomp=unconfined 
+#  --network host \
+#  -w /home/elan/workspace \
+#  -v /home/elan/workspace:/home/elan/workspace \
+#  -v /home/elan/.gitconfig:/root/.gitconfig \
+#  -v /home/elan/.bash_history:/root/.bash_history \
+#  -v /home/elan/Downloads:/root/Downloads elan.dev bash
+  elan.dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.elan.dev
+    container_name: elan.dev
+    cap_add:
+      - ALL
+    privileged: true
+    security_opt:
+      - seccomp:unconfined
+    network_mode: host
+    working_dir: /home/elan/workspace
+    volumes:
+      - /home/elan/workspace:/home/elan/workspace
+      - /home/elan/.gitconfig:/root/.gitconfig
+      - /home/elan/.bash_history:/root/.bash_history
+      - /home/elan/Downloads:/root/Downloads
+    tty: true
+    command: bash
+    restart: always

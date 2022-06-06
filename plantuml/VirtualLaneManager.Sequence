@@ -1,0 +1,11 @@
+@startuml
+participant DataDrivenPlanner
+DataDrivenPlanner -> ReferencePathManager ++ : reference_path_manager_->update()
+loop each reference_path in reference_paths_
+alt virtual_lane_manager has reference_path.lane_id
+ReferencePathManager -> ReferencePathManager : reference_path.update()
+end
+end
+ReferencePathManager -> ReferencePathManager : order_id_to_lane_.clear()
+@enduml
+

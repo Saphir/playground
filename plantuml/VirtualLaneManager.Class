@@ -1,0 +1,58 @@
+@startuml
+class VirtualLane {
+  +VirtualLane();
+  +VirtualLane(const hdmap::mdk::RefLine &ref_line,
+              const Transform &enu2car);
+  -virtual ~VirtualLane();
+  +int order_id();
+  +int virtual_id();
+  +int lc_proposal_id();
+  +int get_default_proposal_id();
+  +bool b_optional();
+  +LooseBoundType loose_bound_type();
+  +void set_loose_bound_type(LooseBoundType loose_bound_type);
+  +void update_loose_bound_type();
+  +const std::vector<VirtualLanePoint> &lane_points() const { return lane_points_; }
+  +int size();
+  +double fabs_lateral_offset();
+  +double calc_fabs_lateral_offset(const double x, const double y);
+  +double lateral_offset();
+  +double calc_lateral_offset(const double x, const double y) const;
+  +double calc_lateral_offset(const std::shared_ptr<VirtualLane> target_lane);
+  +void set_order_id(int order_id);
+  +void set_virtual_id(int virtual_id);
+  +void set_b_optional(bool b_optional);
+  +int get_common_point_num (const std::shared_ptr<VirtualLane> other) const;
+  +bool is_obstacle_on(const Obstacle *obstacle) const;
+  +bool get_point_by_distance(double distance, VirtualLanePoint &point) const;
+  +void has_split_ahead(bool &has_split_ahead, bool  &is_continue) const;
+  +LaneType lane_type() const;
+  +void init();
+  +int lc_map_decision() const;
+  +const hdmap::mdk::Cursor get_car_cursor() const;
+  +int rc_map_decision() const;
+  +double lc_map_decision_offset() const;
+  +bool must_change_lane(double on_route_distance_threshold) const;
+  +const std::vector<NaviEventOnPath> &getLaneMergingSplittings() const;
+  +const hdmap::mdk::RefLine &refline();
+  +static constexpr double kMapMustChangeDistanceUrban = 300.f; // 距离必须变道点（不变道将off route）小于该阈值时，会触发地图换道。
+  +static constexpr double kMapMustChangeDistanceHighway = 600.f; // 距离必须变道点（不变道将off route）小于该阈值时，会触发地图换道。
+  +std::string first_point_lane_id_;
+  -static constexpr double kMinMatchingRatio = 0.5;
+  -void update_lane_change_proposal_id();
+  -double get_matching_score(const DdpTrajectory &lc_proposal);
+  -std::vector<VirtualLanePoint> lane_points_{};
+  -int virtual_id_ = -1;
+  -int order_id_ = -1;
+  -int lc_proposal_id_ = -1;
+  -double lateral_offset_ = 0;
+  -bool b_optional_{true};
+  -Direction lane_marks_ = Direction::UNKNOWN;
+  -LaneType lane_type_ = LaneType::UNKNOWN;
+  -LooseBoundType loose_bound_type_ = NONE_SIDE;
+  -std::vector<int> track_ids_;
+  -hdmap::mdk::RefLine refline_{};
+  -std::vector<NaviEventOnPath> lane_merging_splittings_{};
+}
+@enduml
+

@@ -86,6 +86,7 @@ class RefLine {
     -Cursor cursor_
     -LanePath lane_path_ 
     -RefPoint[] points_
+    -float[] offsets_
     -DriveLaneInfo drive_lane_info_
     -map<NaviEventType, NaviEventOnPath[]> maneuvers_
     -LaneBoundary[] lane_boundaries_right_

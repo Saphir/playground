@@ -1,0 +1,30 @@
+@startuml
+participant DataDrivenPlanner
+DataDrivenPlanner -> VirtualLaneManager ++ : virtual_lane_manager_->update()
+VirtualLaneManager -> VirtualLaneManager : order_id_to_lane_.clear()
+alt not world_model_->is_on_route()
+VirtualLaneManager -> VirtualLaneManager : return false
+end
+VirtualLaneManager -> VirtualLaneManager : get_curr_ramp()
+VirtualLaneManager -> VirtualLaneManager : get_destination()
+loop each ref_line in horizon_kit.getCurrentFrame().getCurRefLines().getLinesAll()
+hnote over VirtualLane : hdmap::mdk::RefLine => VirtualLane
+VirtualLaneManager -> VirtualLane ++ : order_id_to_lane_.append(VirtualLane(ref_line, enu2car_))
+loop lane_point in ref_line
+VirtualLane -> VirtualLane : lane_point -> virtual_lane_point
+end
+VirtualLane -> VirtualLane : lateral_offset_ = calc_lateral_offset(ego_state.x, ego_state.y)
+VirtualLane -> VirtualLane : refline_ = ref_line
+VirtualLane -> VirtualLane : sort(lane_merging_splittings_)
+deactivate
+VirtualLaneManager -> VirtualLaneManager : b_virtual_lanes_new_matched.append(false)
+end
+hnote over VirtualLaneManager : remove unmatched lanes
+hnote over VirtualLaneManager : add remaining new lanes to mapping
+loop each lane in order_id_to_lane_
+VirtualLaneManager -> VirtualLaneManager : lane->init()
+end
+VirtualLaneManager -> VirtualLaneManager : update_current_lane()
+deactivate
+@enduml
+

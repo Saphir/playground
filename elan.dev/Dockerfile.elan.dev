@@ -1,0 +1,91 @@
+# Dockerfile.elan.dev.v1.0.0
+FROM artifactory.momenta.works/docker-momenta/build_env_devcar_momenta_cmake_with_cuda_torch_ros3:v0.0.2 AS PNC_DEV
+ARG MAKE_JOB_NUM=${MAKE_JOB_NUM:-8}
+ENV LANG=C.UTF-8 \
+    WHICH_CAR=MKZ_SIM \
+    CAM_CALIB_DIR=/opt/calib \
+    RESOURCE_PATH=/opt/resource
+
+# fix apt-get: relocation error
+RUN rm -rf /usr/lib/apt/ /usr/bin/apt /usr/bin/apt-cache /usr/bin/apt-cdrom /usr/bin/apt-config /usr/bin/apt-get /usr/bin/apt-key
+COPY --from=ubuntu:16.04 /usr/bin/apt /usr/bin/apt-cache /usr/bin/apt-cdrom /usr/bin/apt-config /usr/bin/apt-get /usr/bin/apt-key /usr/bin/
+COPY --from=ubuntu:16.04 /usr/lib/apt/ /usr/lib/apt/
+COPY --from=ubuntu:16.04 /usr/lib/x86_64-linux-gnu/ /usr/lib/x86_64-linux-gnu/
+
+# update cmake
+RUN apt remove -y cmake gdb tmux \
+ && apt autoremove -y \
+ && conda install -y -c anaconda cmake \
+ && conda install -y -c conda-forge gdb \
+ && conda install -y -c conda-forge tmux
+
+# install make tools
+RUN apt-get update \
+ && apt-get install -yqq \
+    wget \
+    software-properties-common \
+    curl \
+    autoconf \
+    automake \
+    libtool \
+    g++ \
+    unzip \
+    python3-dev \
+    libpython3-dev \
+ && add-apt-repository -y ppa:aacebedo/fasd \
+ && apt-get update \
+ && apt-get install -yqq fasd \
+ && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* 
+
+# install Protobuf
+ARG protobuf_version=3.12.3
+RUN curl -L -O https://github.com/protocolbuffers/protobuf/releases/download/v${protobuf_version}/protobuf-all-${protobuf_version}.tar.gz \
+ && tar -zxvf protobuf-all-${protobuf_version}.tar.gz \
+ && rm protobuf-all-${protobuf_version}.tar.gz \
+ && mv protobuf-${protobuf_version} protobuf \
+ && cd protobuf \
+ && ./configure \
+ && make -j8 \
+ && make install \
+ && make clean \
+ && ldconfig \
+ && cd .. && rm -rf ./protobuf \
+ && python3 -m pip install protobuf poetry
+
+# install python tools
+RUN python3 -m pip install --upgrade pyinstaller wheel setuptools \
+ && python -m pip install --force-reinstall --upgrade pip
+
+# ros
+RUN python3 -m pip install --extra-index-url https://rospypi.github.io/simple/ rospy rosbag roslz4
+
+# install "exploitable" GDB script
+RUN wget -O- 'https://github.com/jfoote/exploitable/archive/master.tar.gz' | tar zxvf - && cd exploitable-master && python setup.py install \
+ && python -c "import exploitable; print(f'{exploitable.__path__[0]}/exploitable.py')" > ~/gdbinit && cd .. && rm -rf exploitable-master \
+ && wget -O ~/.gdbinit-gef.py -q https://gef.blah.cat/py && echo 'source ~/.gdbinit-gef.py' >> ~/.gdbinit \
+ && echo 'set history save on' >> ~/.gdbinit\
+ && echo 'set pagination off' >> ~/.gdbinit \
+ && echo 'set print pretty on' >> ~/.gdbinit \
+ && echo 'set print array on' >> ~/.gdbinit \
+ && echo 'set print object on' >> ~/.gdbinit \
+ && echo 'set print symbol-filename on' >> ~/.gdbinit \
+ && echo 'set height 0' >> ~/.gdbinit \
+ && echo 'handle SIGSEGV nopass stop print' >> ~/.gdbinit
+
+# thefuck, fzf, fasd
+RUN python -m pip install thefuck && echo 'eval $(thefuck --alias)' >> ~/.bashrc && echo 'eval $(thefuck --alias)' >> ~/.zshrc \
+ && rm -rf ~/.fzf && git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf && ~/.fzf/install --all \
+ && wget -O- 'https://github.com/clvv/fasd/tarball/1.0.1' | tar zxvf - && cd *fasd-* && make install && cd .. && rm -rf *fasd-* \
+ && echo 'eval "$(fasd --init auto)"' >> ~/.bashrc && echo 'eval "$(fasd --init auto)"' >> ~/.zshrc
+
+RUN git clone --depth 1 https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting \
+ && git clone --depth 1 https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions \
+ && sed -i -r 's/^(plugins\s*=\s*)\((.*)\)/\1(\2 zsh-syntax-highlighting zsh-autosuggestions)/' ~/.zshrc
+
+# disable oh-my-zsh update prompt
+RUN sed -i '1iDISABLE_AUTO_UPDATE=true' ~/.zshrc ~/.bashrc
+
+COPY .tmux.conf /root/.tmux.conf
+
+CMD bash
+
