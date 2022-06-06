@@ -17,7 +17,8 @@ RUN apt remove -y cmake gdb tmux \
  && apt autoremove -y \
  && conda install -y -c anaconda cmake \
  && conda install -y -c conda-forge gdb \
- && conda install -y -c conda-forge tmux
+ && conda install -y -c conda-forge tmux \
+ && conda install -y -c conda-forge gxx_linux-64==11.1.0
 
 # install make tools
 RUN apt-get update \
