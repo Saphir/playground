@@ -1,0 +1,79 @@
+@startuml
+class NPPTask {
+  + NPPTask();
+  + ~NPPTask();
+  + void init();
+  + void on_load() override;
+  + void on_running() override;
+  + void reset();
+  + void set_planning_output_listener();
+  + void set_planning_trigger_listener();
+  + void set_planning_info_listener();
+  + void set_mdebug_listener();
+  + void set_planning_reset_response_listener();
+  - NPPConfig npp_config_;
+  - mtaskflow::FlowReceiver<T> XXX_receiver_;
+  - NPPOutputListener publish_planning_output_;
+  - NPPTriggerListener publish_planning_trigger_;
+  - NPPInfoListener publish_planning_info_;
+  - NPPMdebugListener publish_mdebug_{};
+  - NPPResetResponseListener publish_planning_reset_response_;
+  - Session npp_session_;
+  - Scheduler scheduler_;
+  - std::shared_ptr<npp::common::StatusManager> monitor_;
+  - WorldModel *world_model_;
+  - std::shared_ptr<ScenarioManager> scenario_manager_;
+  - maf_framework_status::ModuleStatus planning_module_status_;
+  - npp::common::maf_vehicle_status::VehicleStatus vehicle_status_;
+  - maf_system_manager::ModuleControlCmdRequest module_control_cmd_request_;
+  - double last_feed_time_[FEED_TYPE_MAX];
+  - std::string last_feed_msg_id_[FEED_TYPE_MAX];
+  - bool reset_pnc_ = false;
+  - bool last_can_run_ = false;
+  - bool hdmap_enable_statue_received_ = false;
+  - bool enable_timer_tick_{true};
+  - bool sync_mode_by_prediction_{false};
+  - bool reset_{false};
+  - bool reset_finished_{true};
+  - uint64_t ego_pose_timestamp_us_ = 0;
+  - bool lase_cruise_control_set_increase_ = false;
+  - bool last_cruise_control_set_decrease_ = false;
+  - double cruise_velocity_ = 120.0;  // km/h
+  - double navi_time_distance_{3.0};  // s
+  - uint32_t underclocking_num_{10U};
+  - hdmap::mdk::TransformInfo trans_info_{};
+  - hdmap::mdk::Point anchor_{};
+  - bool egopose_status_valid_{false};
+  - bool underclocking_{false};
+  - uint64_t tick_count_{0};
+  - int start_stop_value_{-1};
+  - bool update_tick_count();
+  - void log_tips_info();
+  - bool run_once();
+  - void clear_all_recievers();
+  - void update_chassis_report(double current_time);
+  - void update_wheel_report(double current_time);
+  - void update_body_report(double current_time);
+  - void update_cruise_velocity();
+  - void update_ego_pose(double current_time);
+  - void update_vehicle_status(double current_time);
+  - void fill_prediction_trajectory_point();
+ - void fill_ddp_trajectory_point();
+ - void fill_ddp_trajectory();
+ - void fill_prediction_trajectory();
+ - void fill_prediction_object_info();
+ - void fill_data_driven_planning_info();
+ - void fill_fusion_object_info();
+ - void update_worldmodel_info(double current_time);
+ - void update_fusion_object_info(double current_time);
+ - void update_prediction_info(double current_time);
+ - void update_planning_request(double current_time);
+ - bool planning_reset_received();
+ - void update_world_model(double current_time);
+ - bool can_run();
+ - maf_planning::Planning generate_planning_output();
+ - maf_std::Header generate_planning_info();
+ - bool skip_current_frame_for_underclocking();
+}
+
+@enduml

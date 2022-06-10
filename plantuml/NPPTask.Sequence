@@ -1,0 +1,81 @@
+@startuml
+participant mtaskflow
+
+mtaskflow -> NPPTask ++ : task->on_running()
+NPPTask -> NPPTask : update_tick_count()
+NPPTask -> Session : npp_session_.update()()
+alt planning_reset_received()
+NPPTask -> NPPTask : return
+end
+alt sync_mode_by_prediction_ && prediction_result_receiver_->empty()
+NPPTask -> NPPTask : return
+end
+alt module_control_cmd_request_ is PAUSE
+NPPTask -> NPPTask : return
+end
+NPPTask -> NPPTask ++ : run_once()
+NPPTask -> NPPTask : // save pre_planning_result
+NPPTask -> NPPTask : // set planning_result.next_timestamp
+NPPTask -> PlanningFailTracer : PlanningFailTracer::Instance()->reset()
+
+NPPTask -> NPPTask ++ : update_world_model()
+alt not module_status_receiver_->empty()
+hnote over NPPTask : // GET module_status
+NPPTask -> WorldModel : feed_vehicle_dbw_status(status)
+end
+
+NPPTask -> NPPTask ++ : update_fusion_object_info() // maf_perception_interface::PerceptionFusionObjectResult
+NPPTask -> FusionObjectManager : fusion_object_manager->feed_fusion_object_info(fusion_object_result)
+deactivate
+
+NPPTask -> NPPTask ++ : update_planning_request()
+hnote over NPPTask : // GET maf_system_manager::SysPlanningRequest
+hnote over NPPTask : // case cmd.value in PLANNING_HIGHWAY_FUNCTION_MODE PLANNING_HIGHWAY_NAVI_SETTINGS PLANNING_HIGHWAY_DRIVING_STYLE
+hnote over NPPTask : // case cmd.value in PLANNING_HIGHWAY_LANE_CHANGE
+hnote over NPPTask : // case cmd.value in PLANNING_HIGHWAY_START_STOP
+NPPTask -> NPPTask : // end case()
+deactivate
+
+NPPTask -> NPPTask ++ : update_vehicle_status()
+NPPTask -> NPPTask : update_chassis_report() // STEERING BRAKE GEAR THROTTLE
+NPPTask -> NPPTask : update_wheel_report() // WHEEL SPEED
+NPPTask -> NPPTask : update_body_report() // VEHICLE_LIGHT
+
+NPPTask -> NPPTask ++ : update_ego_pose()
+NPPTask -> NPPTask : // SET VehicleStatus: velocity location heading_yaw
+NPPTask -> EgoPoseManager : feed_ego_velocity()
+NPPTask -> EgoPoseManager : feed_ego_position()
+NPPTask -> NPPTask : update_global_boot_transform()
+deactivate
+
+alt vehicle_status_.available
+NPPTask -> WorldModel : feed_vehicle_status() // ego_state_ local_view_ trans_ anchor_
+hnote over WorldModel : // SET ego_state_manager_ wheel_speed_report_ vehicle_light_report_ vehicle_status_ egopose_status_valid_ trans_ anchor_
+end
+deactivate
+
+NPPTask -> NPPTask ++ : update_worldmodel_info()
+NPPTask -> WorldModel : world_model_->feed_horizon(map_offline.data)
+NPPTask -> WorldModel : world_model_->feed_traffic_light_info()
+NPPTask -> TrafficLightInfoManager : traffic_light_info_manager->feed_traffic_light_info()
+deactivate
+
+NPPTask -> NPPTask ++ : update_prediction_info()
+NPPTask -> NPPTask ++ : fill_prediction_object_info()
+NPPTask -> NPPTask : fill_prediction_trajectory()
+deactivate
+deactivate
+deactivate
+
+NPPTask -> NPPTask : skip_current_frame_for_underclocking()
+NPPTask -> NPPTask : can_run()
+NPPTask -> WorldModel : world_model_->update()
+NPPTask -> Scheduler : scheduler_.run_once(nullptr)
+deactivate
+
+NPPTask -> NPPTask : generate_planning_output()
+NPPTask -> NPPTask : generate_planning_info()
+NPPTask -> NPPTask : publish_mdebug_()
+
+deactivate
+@enduml
