@@ -4,11 +4,11 @@ services:
 #  --privileged --cap-add=SYS_PTRACE 
 #  --security-opt seccomp=unconfined 
 #  --network host \
-#  -w /home/elan/workspace \
-#  -v /home/elan/workspace:/home/elan/workspace \
-#  -v /home/elan/.gitconfig:/root/.gitconfig \
-#  -v /home/elan/.bash_history:/root/.bash_history \
-#  -v /home/elan/Downloads:/root/Downloads elan.dev bash
+#  -w ${HOME}/workspace \
+#  -v ${HOME}/workspace:${HOME}/workspace \
+#  -v ${HOME}/.gitconfig:/root/.gitconfig \
+#  -v ${HOME}/.bash_history:/root/.bash_history \
+#  -v ${HOME}/Downloads:/root/Downloads elan.dev bash
   elan.dev:
     build:
       context: .
@@ -20,12 +20,12 @@ services:
     security_opt:
       - seccomp:unconfined
     network_mode: host
-    working_dir: /home/elan/workspace
+    working_dir: ${HOME}/workspace
     volumes:
-      - /home/elan/workspace:/home/elan/workspace
-      - /home/elan/.gitconfig:/root/.gitconfig
-      - /home/elan/.bash_history:/root/.bash_history
-      - /home/elan/Downloads:/root/Downloads
+      - ${HOME}/workspace:${HOME}/workspace
+      - ${HOME}/.gitconfig:/root/.gitconfig
+      - ${HOME}/.bash_history:/root/.bash_history
+      - ${HOME}/Downloads:/root/Downloads
     tty: true
     command: bash
     restart: always
