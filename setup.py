@@ -1,5 +1,5 @@
 from distutils import extension
-from setuptools import setup, find_packages
+from setuptools import setup
 
 demo_ext = extension.Extension(
   name = 'demo_ext',
