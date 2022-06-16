@@ -33,6 +33,7 @@ RUN apt-get update \
     unzip \
     python3-dev \
     libpython3-dev \
+    cargo \
  && add-apt-repository -y ppa:aacebedo/fasd \
  && apt-get update \
  && apt-get install -yqq fasd \
@@ -59,6 +60,11 @@ RUN python3 -m pip install --upgrade pyinstaller wheel setuptools \
 
 # ros
 RUN python3 -m pip install --extra-index-url https://rospypi.github.io/simple/ rospy rosbag roslz4
+
+# fd
+RUN wget https://github.com/sharkdp/fd/releases/download/v8.4.0/fd_8.4.0_amd64.deb \
+ && dpkg -i fd_8.4.0_amd64.deb \
+ && rm fd_8.4.0_amd64.deb
 
 # install "exploitable" GDB script
 RUN wget -O- 'https://github.com/jfoote/exploitable/archive/master.tar.gz' | tar zxvf - && cd exploitable-master && python setup.py install \
