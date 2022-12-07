@@ -6,6 +6,10 @@ type compressStream struct {
 	stream iStream
 }
 
+func NewCompressStream(s iStream) *compressStream {
+	return &compressStream{stream: s}
+}
+
 func(cs *compressStream) Read() string {
 	data := cs.stream.Read()
 	fmt.Println("Decompressing data")

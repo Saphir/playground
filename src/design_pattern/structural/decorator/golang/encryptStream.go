@@ -6,6 +6,10 @@ type encriptStream struct {
 	stream iStream
 }
 
+func NewEncriptStream(s iStream) *encriptStream {
+	return &encriptStream{stream: s}
+}
+
 func(es *encriptStream) Read() string {
 	data := es.stream.Read()
 	fmt.Println("Decrypting data")
