@@ -1,22 +1,21 @@
 package visitor
 
 type Sdk struct {
-	visitor IVisitor
-	components []IComponent
+	rates []Rate
 }
 
 func NewSdk() *Sdk {
 	sdk := &Sdk{}
-	sdk.components = []IComponent{
-		&Door{component{"door"}},
-		&Wheel{component{"wheel"}},
+	sdk.rates = []Rate{
+		Rate{&Doller2Rmb{}},
+		Rate{&Doller2Euro{}},
+		Rate{&Doller2Yen{}},
 	}
 	return sdk
 }
 
-func (s *Sdk) Accept(visitor IVisitor) {
-	s.visitor = visitor
-    for _, component := range s.components {
-		component.accept(visitor)
+func (s *Sdk) Accept(visitor* Visitor) {
+    for _, rate := range s.rates {
+		rate.accept(visitor)
 	}
 }
